@@ -128,15 +128,15 @@ def get_sentiment_report(input_filename, output_filename, start_date=None, simul
         print(flair_sentiment_dict[str(row_i)], tb_sentiment_polarity_dict[str(row_i)],
               tb_sentiment_subjectivity_dict[str(row_i)])
 
-        flair_df = pd.DataFrame.from_dict(flair_sentiment_dict, orient='index', columns=['flair_sentiment'])
+        flair_df = pd.DataFrame.from_dict(flair_sentiment_dict, orient='index', columns=['gnews_flair'])
         flair_df.index.name = 'date'
 
         tb_polarity_df = pd.DataFrame.from_dict(tb_sentiment_polarity_dict, orient='index',
-                                                columns=['tb_polarity_sentiment'])
+                                                columns=['gnews_tb_polarity'])
         tb_polarity_df.index.name = 'date'
 
         tb_subjectivity_df = pd.DataFrame.from_dict(tb_sentiment_subjectivity_dict, orient='index',
-                                                    columns=['tb_subjectivity_sentiment'])
+                                                    columns=['gnews_tb_subjectivity'])
         tb_subjectivity_df.index.name = 'date'
 
         final_senti_df = pd.concat([flair_df, tb_polarity_df, tb_subjectivity_df], axis=1)
@@ -162,6 +162,6 @@ def clean_sentiment_report(input_filename, output_filename):
 
 if __name__ == "__main__":
     input_filename = 'google_news_final.csv'
-    output_filename = input_filename[0:-4] + '_sentiment_1.csv'
+    output_filename = input_filename[0:-4] + '_sentiment.csv'
     get_sentiment_report(input_filename, output_filename, simulate=False)
     clean_sentiment_report(output_filename, output_filename)
