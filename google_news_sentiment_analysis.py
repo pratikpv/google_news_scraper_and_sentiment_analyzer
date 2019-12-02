@@ -4,6 +4,7 @@ from textblob import TextBlob
 import os
 import datetime
 import numpy as np
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 fmt = '%Y-%m-%d'
 
@@ -64,8 +65,10 @@ def get_sentiment_report(input_filename, output_filename, start_date=None, simul
     # sid = SentimentIntensityAnalyzer()
     if simulate:
         flair_sentiment = None
+        sid = None
     else:
         flair_sentiment = flair.models.TextClassifier.load('en-sentiment')
+        sid = SentimentIntensityAnalyzer()
     temp_c = 0
     for row_i, row in data_df.iterrows():
         temp_c += 1
@@ -85,10 +88,20 @@ def get_sentiment_report(input_filename, output_filename, start_date=None, simul
         tb_sentiment_subjectivity_dict = dict()
         flair_sentiment_dict = dict()
 
+        sid_pos_dict = dict()
+        sid_neg_dict = dict()
+        sid_neu_dict = dict()
+        sid_com_dict = dict()
+
         flair_sentiment_total = 0
 
         tb_polarity_total = 0
         tb_subjectivity_total = 0
+
+        sid_pos_total = 0
+        sid_neg_total = 0
+        sid_neu_total = 0
+        sid_com_total = 0
 
         # sid_polarity_total = {'neg': 0., 'neu': 0., 'pos': 0., 'compound': 0.}
 
@@ -104,9 +117,6 @@ def get_sentiment_report(input_filename, output_filename, start_date=None, simul
                 tb_subjectivity_total = 7
                 total_sentiment_data_count = 9
             else:
-                # sid_polarity = sid.polarity_scores(data)
-                # add_to_dict(sid_polarity_total, sid_polarity)
-
                 tb_polarity_total += TextBlob(data).sentiment[0]
                 tb_subjectivity_total += TextBlob(data).sentiment[1]
 
@@ -115,16 +125,19 @@ def get_sentiment_report(input_filename, output_filename, start_date=None, simul
                 flair_total_sentiment = flair_s.labels
                 flair_val = get_sentiment_val_for_flair(flair_total_sentiment)
                 flair_sentiment_total += flair_val
-                total_sentiment_data_count += 1
 
-                # print(flair_sentiment_total / total_sentiment_data_count, tb_polarity_total / total_sentiment_data_count,
-                #      tb_subjectivity_total / total_sentiment_data_count)
+                ss = sid.polarity_scores(data)
+                sid_pos_total += ss['pos']
+                sid_neg_total += ss['neg']
+                sid_neu_total += ss['neu']
+                sid_com_total += ss['compound']
+
+                total_sentiment_data_count += 1
 
         print(str(row_i), ' ', temp_c)
         flair_sentiment_dict[str(row_i)] = flair_sentiment_total / total_sentiment_data_count
         tb_sentiment_polarity_dict[str(row_i)] = tb_polarity_total / total_sentiment_data_count
         tb_sentiment_subjectivity_dict[str(row_i)] = tb_subjectivity_total / total_sentiment_data_count
-        # devide_dict_by_scaler(sid_polarity_total, total_sentiment_data_count)
         print(flair_sentiment_dict[str(row_i)], tb_sentiment_polarity_dict[str(row_i)],
               tb_sentiment_subjectivity_dict[str(row_i)])
 
@@ -139,7 +152,29 @@ def get_sentiment_report(input_filename, output_filename, start_date=None, simul
                                                     columns=['gnews_tb_subjectivity'])
         tb_subjectivity_df.index.name = 'date'
 
-        final_senti_df = pd.concat([flair_df, tb_polarity_df, tb_subjectivity_df], axis=1)
+        sid_pos_dict[str(row_i)] = sid_pos_total / total_sentiment_data_count
+        sid_neg_dict[str(row_i)] = sid_neg_total / total_sentiment_data_count
+        sid_neu_dict[str(row_i)] = sid_neu_total / total_sentiment_data_count
+        sid_com_dict[str(row_i)] = sid_com_total / total_sentiment_data_count
+
+        sid_pos_df = pd.DataFrame.from_dict(sid_pos_dict, orient='index',
+                                            columns=['gnews_sid_pos'])
+        sid_pos_df.index.name = 'timestamp'
+
+        sid_neg_df = pd.DataFrame.from_dict(sid_neg_dict, orient='index',
+                                            columns=['gnews_sid_neg'])
+        sid_neg_df.index.name = 'timestamp'
+
+        sid_neu_df = pd.DataFrame.from_dict(sid_neu_dict, orient='index',
+                                            columns=['gnews_sid_neu'])
+        sid_neu_df.index.name = 'timestamp'
+
+        sid_com_df = pd.DataFrame.from_dict(sid_com_dict, orient='index',
+                                            columns=['gnews_sid_com'])
+        sid_com_df.index.name = 'timestamp'
+
+        final_senti_df = pd.concat([flair_df, tb_polarity_df, tb_subjectivity_df, sid_pos_df, sid_neg_df,
+                            sid_neu_df, sid_com_df], axis=1)
 
         if os.path.exists(output_filename):
             keep_header = False
