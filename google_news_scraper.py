@@ -26,6 +26,8 @@ news_cols = ['index', 'date', 'status_code', 'url', 'news_1_url', 'news_1_text',
              'news_9_publish_date']
 
 
+news_data_df = pd.DataFrame(index=[0],columns=news_cols)
+
 def run_google_news_scrapper(**params):
     output_file_name = ''
     for key, value in params.items():
@@ -35,24 +37,20 @@ def run_google_news_scrapper(**params):
             output_file_name = value
 
     news_data_dict = dict()
-    columns = []
     news_data_dict['date'] = min_date
-    columns.append('date')
     response = requests.get(URL.format(**params), headers=headers)
     soup = BeautifulSoup(response.text, 'html.parser')
     news_data_dict['status_code'] = response.status_code
-    columns.append('status_code')
     if response.status_code != 200:
         print("******** fail ********** ")
         return
     # print(response.url)
     news_data_dict['url'] = response.url
-    columns.append('url')
     count = 1
     for link in soup.find_all('a'):
         link_str = str(link.get('href'))
         try:
-            if link_str.startswith("https://") and link_str.find('google.com') == -1 and link_str.find(
+            if link_str.startswith("https://") and link_str.find('google.com') == -1 and link_str.find('google.co.in') == -1 and link_str.find(
                     "https://www.youtube.com/") == -1 and link_str.find("https://www.blogger.com/") == -1:
                 article = Article(link_str)
                 article.download()
@@ -66,17 +64,15 @@ def run_google_news_scrapper(**params):
                 news_data_dict[news_count + '_text'] = article.text
                 news_data_dict[news_count + '_publish_date'] = article.publish_date
 
-                columns.append(news_count + '_url')
-                columns.append(news_count + '_text')
-                columns.append(news_count + '_publish_date')
                 count += 1
                 if count >= max_count:
                     break
 
         except:
             pass
-    news_data_df = pd.DataFrame(news_data_dict, index=[0],
-                                columns=news_cols)
+    
+    global news_data_df
+    news_data_df = news_data_df.append(news_data_dict, ignore_index=True)
 
     """
     if os.path.exists(output_file_name):
@@ -86,9 +82,8 @@ def run_google_news_scrapper(**params):
 
     news_data_df.to_csv(output_file_name, mode='a', header=keep_header)
     """
-    news_data_df.to_csv(output_file_name)
 
-    return news_data_dict
+    #return news_data_dict
 
 
 def google_news_scrapper(start_date, end_date, output_file_name):
@@ -102,6 +97,8 @@ def google_news_scrapper(start_date, end_date, output_file_name):
         run_google_news_scrapper(min_date=start_date, max_date=start_date, output_file=output_file_name)
         time.sleep(np.random.randint(2, 5))
         start_date_time_obj += step_obj
+    
+    news_data_df.to_csv(output_file_name)
 
 
 def sort_news_report(input_file_name, cleaned_output_file_name, save_index=False):
@@ -127,11 +124,14 @@ def clean_news_report(input_file_name, cleaned_output_file_name, save_index=Fals
     idx = np.unique(master_df.index, return_index=True)[1]
     master_df = master_df.iloc[idx]
     master_df.to_csv(cleaned_output_file_name)
-
-    master_df.to_csv(cleaned_output_file_name)
     if save_index:
         df_i = pd.DataFrame(master_df.index)
         df_i.to_csv(cleaned_output_file_name[0:-4] + '_index.csv')
+    
+    # More text processing needed : - Remove Punctuation/Symbols - Removing stopwords? - Normalization - Stemming/Lemmatization - POS Tagging/Chunking
+
+    # https://towardsdatascience.com/text-cleaning-methods-for-natural-language-processing-f2fc1796e8c7
+    # https://medium.com/@sabber/classifying-yelp-review-comments-using-lstm-and-word-embeddings-part-1-eb2275e4066b
 
 
 if __name__ == "__main__":
