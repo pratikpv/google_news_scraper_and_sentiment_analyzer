@@ -1,6 +1,6 @@
 # Google News scraper and sentiment analyzer using python
 
-Summery:
+Summary:
 * Downloads news articles by searching on http://www.news.google.com with keywords of interest and specific date ranges.
 * Generates CVS files of news text
 * Uses pre-trained NLP models to perform sentiment analysis of the news text.
