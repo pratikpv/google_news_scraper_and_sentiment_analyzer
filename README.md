@@ -1,9 +1,9 @@
 # Google News scraper and sentiment analyzer using python
 
-
-* Download news articles by searching on http://www.news.google.com with keywords of interest and specific date ranges.
-* generates CVS files of news text
-* uses pre-trained NLP models to perform sentiment analysis of the news text.
+Summery:
+* Downloads news articles by searching on http://www.news.google.com with keywords of interest and specific date ranges.
+* Generates CVS files of news text
+* Uses pre-trained NLP models to perform sentiment analysis of the news text.
 
 
 ### google_news_scraper.py
@@ -22,6 +22,8 @@
 * Sample data generated at this stage looks like this.
   ![alt text](https://github.com/pratikpv/google_news_scraper_and_sentiment_analyzer/blob/master/sample_google_news_final_sentiment.png)
 
+
+### This framework is used in https://github.com/pratikpv/predicting_bitcoin_market
 
 ### Credits:
 Code from https://towardsdatascience.com/web-scraping-news-articles-in-python-9dd605799558 is referenced as base to write scraper code.
